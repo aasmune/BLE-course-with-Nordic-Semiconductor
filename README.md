@@ -13,5 +13,8 @@ Custom BLE service made during Bluetooth course with Nordic Semiconductor and Om
 
 
 **NOTE:**
-You may need to change the path to the Softdevice hex file in the project options from relative to absolute. 
-This can be done by right clicking the project and selecting `Edit Options -> Debug -> Loader` and changing  `Additional Load File[0]` to the absolute path of the softdevice hex that is located in `~/NordicSemi/SDK_14_1/components/softdevice/s132/hex/s132_nrf52_5.0.0_softdevice.hex`.
+When flashing the softdevice the first time, this error may come up
+![alt text](https://github.com/aasmune/BLE-course-with-Nordic-Semiconductor/blob/master/images/Softdevice_not_found_error.png "Softdevice not found error")
+In this case, you need to change the path to the Softdevice hex file in the project options. 
+This can be done by right clicking the project and selecting `Edit Options -> Debug -> Loader` and changing  `Additional Load File[0]` to the absolute path of the softdevice hex that is located in `<Root folder of sdk>/components/softdevice/s132/hex/s132_nrf52_5.0.0_softdevice.hex`.
+![alt text](https://github.com/aasmune/BLE-course-with-Nordic-Semiconductor/blob/master/images/Fix_for_softdevice_hex_not_found_error.png "Fix for Softdevice not found error")
