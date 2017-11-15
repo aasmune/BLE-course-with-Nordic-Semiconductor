@@ -83,7 +83,7 @@
     <folder Name="Application">
       <file file_name="../../../main.c" />
       <file file_name="../config/sdk_config.h" />
-      <file file_name="ble_cus.h" />
+      <file file_name="../../../ble_cus.h" />
       <file file_name="../../../ble_cus.c" />
     </folder>
     <folder Name="nRF_Segger_RTT">
@@ -122,7 +122,7 @@
     </folder>
     <configuration
       Name="Debug"
-      debug_additional_load_file="/home/aasmune/Documents/NordicSemi/SDK_14_1/components/softdevice/s132/hex/s132_nrf52_5.0.0_softdevice.hex" />
+      debug_additional_load_file="/home/aasmune/Documents/NordicSemi/nRF5_SDK_14.1.0_1dda907/components/softdevice/s132/hex/s132_nrf52_5.0.0_softdevice.hex" />
   </project>
   <configuration
     Name="Release"

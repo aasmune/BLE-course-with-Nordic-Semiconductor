@@ -112,12 +112,15 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-
+#define NOTIFICATION_INTERVAL           APP_TIMER_TICKS(1000)
 
 
 NRF_BLE_GATT_DEF(m_gatt);                                                       /**< GATT module instance. */
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
 BLE_CUS_DEF(m_cus);                                                            /**< Custom service instance. */
+
+APP_TIMER_DEF(m_notification_timer_id);
+static uint8_t m_custom_value = 0;
 
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
@@ -253,6 +256,25 @@ static void pm_evt_handler(pm_evt_t const * p_evt)
     }
 }
 
+/**@brief Function for handling the Battery measurement timer timeout.
+ *
+ * @details This function will be called each time the battery level measurement timer expires.
+ *
+ * @param[in] p_context  Pointer used for passing some arbitrary information (context) from the
+ *                       app_start_timer() call to the timeout handler.
+ */
+static void notification_timeout_handler(void * p_context)
+{
+    UNUSED_PARAMETER(p_context);
+    ret_code_t err_code;
+    
+    // Increment the value of m_custom_value before nortifing it.
+    m_custom_value++;
+    
+    err_code = ble_cus_custom_value_update(&m_cus, m_custom_value);
+    APP_ERROR_CHECK(err_code);
+}
+
 
 /**@brief Function for the Timer initialization.
  *
@@ -262,6 +284,10 @@ static void timers_init(void)
 {
     // Initialize timer module.
     ret_code_t err_code = app_timer_init();
+    APP_ERROR_CHECK(err_code);
+
+    // Create timers.
+    err_code = app_timer_create(&m_notification_timer_id, APP_TIMER_MODE_REPEATED, notification_timeout_handler);
     APP_ERROR_CHECK(err_code);
 
     // Create timers.
@@ -344,6 +370,43 @@ static void on_yys_evt(ble_yy_service_t     * p_yy_service,
     }
 }
 */
+/**@brief Function for handling the Custom Service Service events.
+ *
+ * @details This function will be called for all Custom Service events which are passed to
+ *          the application.
+ *
+ * @param[in]   p_cus_service  Custom Service structure.
+ * @param[in]   p_evt          Event received from the Custom Service.
+ *
+ */
+static void on_cus_evt(ble_cus_t     * p_cus_service,
+                       ble_cus_evt_t * p_evt)
+{
+    ret_code_t err_code;
+    switch(p_evt->evt_type)
+    {
+        case BLE_CUS_EVT_NOTIFICATION_ENABLED:
+            err_code = app_timer_start(m_notification_timer_id, NOTIFICATION_INTERVAL, NULL);
+            APP_ERROR_CHECK(err_code);
+            break;
+
+        case BLE_CUS_EVT_NOTIFICATION_DISABLED:
+            err_code = app_timer_stop(m_notification_timer_id);
+            APP_ERROR_CHECK(err_code);
+            break;
+
+        case BLE_CUS_EVT_CONNECTED :
+            break;
+
+        case BLE_CUS_EVT_DISCONNECTED:
+            break;
+
+        default:
+              // No implementation needed.
+              break;
+    }
+}
+
 
 
 /**@brief Function for initializing services that will be used by the application.
@@ -379,6 +442,11 @@ static void services_init(void)
 
      // Initialize CUS Service init structure to zero.
     memset(&cus_init, 0, sizeof(cus_init));
+    cus_init.evt_handler = on_cus_evt;
+    
+    // Allow write and read permissions to characteristic value
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init.custom_value_char_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cus_init.custom_value_char_attr_md.write_perm);
 	
     err_code = ble_cus_init(&m_cus, &cus_init);
     APP_ERROR_CHECK(err_code);	
